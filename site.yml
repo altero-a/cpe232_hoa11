@@ -1,0 +1,53 @@
+---
+- hosts: all
+  become: true
+  tasks:
+
+  - name: update apt cache
+    apt:
+      update_cache: yes
+
+  - name: install prerequisites
+    apt:
+      name:
+        - apt-transport-https
+        - ca-certificates
+        - curl
+        - gnupg
+        - lsb-release
+      state: present
+
+  - name: add docker GPG key
+    apt_key:
+      url: https://download.docker.com/linux/ubuntu/gpg
+      state: present
+
+  - name: add docker repository
+    apt_repository:
+      repo: deb [arch=amd64] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable
+      state: present
+
+  - name: update apt cache
+    apt:
+      update_cache: yes
+
+  - name: install docker
+    apt:
+      name: docker-ce
+      state: present
+
+  - name: ensure docker service is started and enabled
+    service:
+      name: docker
+      state: started
+      enabled: yes
+
+  - name: add docker group to current user
+    ansible.builtin.group:
+      name: altero-docker
+      state: present
+
+  - name: copy docker file
+    copy:
+      src: /home/altero/cpe232_hoa11/dockerfile
+      dest: /home/altero/Docker
